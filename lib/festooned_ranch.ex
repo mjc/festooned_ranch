@@ -1,6 +1,9 @@
 defmodule FestoonedRanch do
-  @spec start_link :: {:error, any} | {:ok, :undefined | pid} | {:ok, :undefined | pid, any}
-  def start_link() do
-    :ranch.start_listener(:festooned, :ranch_tcp, [{:port, 5555}], FestoonedRanch.GenProtocol, [])
+  def start_listener(ref) do
+    :ranch.start_listener(ref, :ranch_tcp, [port: 5555], FestoonedRanch.Protocol, [])
+  end
+
+  def start_client() do
+    :gen_tcp.connect({127, 0, 0,1}, 5555, [:binary, :inet, active: false, packet: :line])
   end
 end
