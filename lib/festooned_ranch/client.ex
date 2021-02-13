@@ -7,7 +7,7 @@ defmodule FestoonedRanch.Client do
     # I have not done that here because I don't feel like making the tests
     # any harder to read.
 
-    {:ok, socket} = :gen_tcp.connect(ip, port, [:binary, :inet, active: true, packet: :line])
+    {:ok, socket} = :gen_tcp.connect(ip, port, [:binary, :inet, active: true, packet: 0])
     :gen_tcp.controlling_process(socket, self())
 
     {:ok, Map.put(state, :socket, socket)}
@@ -17,6 +17,22 @@ defmodule FestoonedRanch.Client do
     GenServer.start_link(__MODULE__, default)
   end
 
+  def handle_info(:connect, %{ip: ip, port: port} = state) do
+    {:ok, socket} = :gen_tcp.connect(ip, port, [:binary, :inet, active: true, packet: 0])
+    :gen_tcp.controlling_process(socket, self())
+
+    {:noreply, Map.put(state, :socket, socket)}
+  end
+  @impl true
+  def handle_info({:tcp, _socket, _data}, state) do
+    #IO.inspect(data, label: "client got")
+    {:noreply, state}
+  end
+
+  def handle_info({:tcp_closed, _}, state), do: {:stop, :normal, state}
+  def handle_info({:tcp_error, _}, state), do: {:stop, :normal, state}
+
+
   @impl true
   def handle_call({:send, data}, _from, %{socket: socket} = state) do
     {:reply, :gen_tcp.send(socket, data), state}
@@ -25,17 +41,4 @@ defmodule FestoonedRanch.Client do
   def send(pid, data) do
     GenServer.call(pid, {:send, data})
   end
-
-
-  # @impl true
-  # def handle_info(:connect, %{ip: ip, port: port} = state) do
-  #   {:ok, socket} = :gen_tcp.connect(ip, port, [:binary, :inet, active: true, packet: :line])
-  #   :gen_tcp.controlling_process(socket, self())
-
-  #   {:noreply, Map.put(state, :socket, socket)}
-  # end
-
-  # defp connect() do
-  #   Process.send_after(self(), :connect, 0)
-  # end
 end

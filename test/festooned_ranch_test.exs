@@ -3,6 +3,7 @@ defmodule FestoonedRanchTest do
   doctest FestoonedRanch
 
   alias FestoonedRanch.Client
+  alias FestoonedRanch.Protocol
 
   setup_all do
     ref = :festooned
@@ -17,18 +18,14 @@ defmodule FestoonedRanchTest do
   test "have client send to server over TCP", %{client: client, server: server} do
     :erlang.trace(server, true, [:receive])
 
-    assert :ok = Client.send(client, "from client to server")
-    assert_receive {:trace, ^server, :receive, {:tcp, _port, "from client to server"}}
+    assert :ok = Client.send(client, "from client to server\n")
+    assert_receive {:trace, ^server, :receive, {:tcp, _port, "from client to server\n"}}
   end
 
-  @tag :skip
-  test "send from server to client over TCP", %{client: client, server: server} do
+  test "send from server to client over TCP", %{ref: ref, client: client} do
     :erlang.trace(client, true, [:receive])
 
-    :gen_tcp.controlling_process(client, self())
-
-
-    assert :ok = GenServer.call(server, "from server to client")
-    assert_receive {:trace, ^server, :receive, {:tcp, _port, "from server to client"}}
+    assert :ok = Protocol.send(ref, "from server to client\n")
+    assert_receive {:trace, ^client, :receive, {:tcp, _port, "from server to client\n"}}
   end
 end

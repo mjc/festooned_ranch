@@ -17,19 +17,25 @@ defmodule FestoonedRanch.Protocol do
   end
 
   @impl true
-  def handle_call(data, _from, %{socket: socket, transport: transport} = state) do
-    transport.send(socket, data)
-    {:reply, :ok, state}
-  end
-
-  @impl true
-  def handle_info({:tcp, socket, data}, state = %{socket: socket, transport: transport}) do
+  def handle_info({:tcp, socket, data}, %{socket: socket, transport: transport} = state) do
+    #IO.inspect(data, label: "server got")
     transport.send(socket, data)
     {:noreply, state}
   end
 
-  def handle_info({:tcp_closed, socket}, state = %{socket: socket, transport: transport}) do
+  def handle_info({:tcp_closed, socket}, %{socket: socket, transport: transport} = state) do
     transport.close(socket)
     {:stop, :normal, state}
+  end
+
+  @impl true
+  def handle_call({:send, data}, _from, %{socket: socket, transport: transport} = state) do
+    {:reply, transport.send(socket, data), state}
+  end
+
+  @spec send(any, any) :: any
+  def send(ref, data) do
+    [first_connection] = :ranch.procs(ref, :connections)
+    GenServer.call(first_connection, {:send, data})
   end
 end
