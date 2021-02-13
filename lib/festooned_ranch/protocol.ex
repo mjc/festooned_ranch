@@ -33,9 +33,21 @@ defmodule FestoonedRanch.Protocol do
     {:reply, transport.send(socket, data), state}
   end
 
+  def handle_call(:peername, _from, %{socket: socket} = state) do
+    {:reply, :inet.peername(socket), state}
+  end
+
   @spec send(any, any) :: any
   def send(ref, data) do
     [first_connection] = :ranch.procs(ref, :connections)
     GenServer.call(first_connection, {:send, data})
+  end
+
+  def peernames(ref) do
+    connections = :ranch.procs(ref, :connections)
+    Enum.map(connections, fn(conn) ->
+      {:ok, {ip, port}} = GenServer.call(conn, :peername)
+      {ip, port}
+    end)
   end
 end

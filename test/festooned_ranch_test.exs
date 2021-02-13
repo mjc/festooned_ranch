@@ -28,4 +28,12 @@ defmodule FestoonedRanchTest do
     assert :ok = Protocol.send(ref, "from server to client\n")
     assert_receive {:trace, ^client, :receive, {:tcp, _port, "from server to client\n"}}
   end
+
+  test "get peer names for all connections", %{ref: ref, client: _client1} do
+    {:ok, _client2} = FestoonedRanch.start_client()
+    {:ok, _client3} = FestoonedRanch.start_client()
+    {:ok, _client4} = FestoonedRanch.start_client()
+
+    assert [{{127, 0, 0, 1}, _port} | _] = Protocol.peernames(ref)
+  end
 end
