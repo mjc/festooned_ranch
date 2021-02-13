@@ -1,21 +1,34 @@
-# FestoonedRanch
+# Ranch 2.0 demo w/ Elixir GenServer
 
-**TODO: Add description**
+This demo shows how to use an Elixir GenServer for sending and receiving data via Ranch 2.0.
 
-## Installation
+I made this because existing demos are 1. out of date and 2. don't show how to send data to the GenServer from other processes.
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `festooned_ranch` to your list of dependencies in `mix.exs`:
+To use:
 
-```elixir
-def deps do
-  [
-    {:festooned_ranch, "~> 0.1.0"}
-  ]
-end
+```
+# iex -S mix
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/festooned_ranch](https://hexdocs.pm/festooned_ranch).
+then:
+```
+FestoonedRanch.start_link()
+```
 
+then in another terminal:
+
+```
+# nc localhost 5555
+```
+
+This will start an echo server.
+
+To send messages to the `nc` client from `iex`, do this in `iex`:
+
+```
+:ranch.procs(:festooned, :connections) |> List.first() |> GenServer.call("moo")
+```
+
+`:festooned` is set as the ref passed in as the first argument to `:ranch.start_listener/5`.
+
+If you do not have any established connections, `:ranch.procs(:festooned, :connections)` will return an empty list.
