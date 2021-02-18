@@ -12,7 +12,9 @@ defmodule FestoonedRanch.Protocol do
   @impl true
   def init([ref, transport, opts]) do
     {:ok, socket} = :ranch.handshake(ref, opts)
-    :ok = transport.setopts(socket, [{:active, true}])
+    # {:packet, 2} here expects a big-endian length at the start of your packet
+    # and then it knows how much data to expect
+    :ok = transport.setopts(socket, [{:active, true}, {:packet, 2}])
     :gen_server.enter_loop(__MODULE__, [], %{socket: socket, transport: transport})
   end
 

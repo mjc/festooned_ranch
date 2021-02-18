@@ -7,7 +7,8 @@ defmodule FestoonedRanch.Client do
     # I have not done that here because I don't feel like making the tests
     # any harder to read.
 
-    {:ok, socket} = :gen_tcp.connect(ip, port, [:binary, :inet, active: true, packet: 0])
+    # {:packet, 2} here prepends a big-endian length header to the data you send.
+    {:ok, socket} = :gen_tcp.connect(ip, port, [:binary, :inet, active: true, packet: 2])
     :gen_tcp.controlling_process(socket, self())
 
     {:ok, Map.put(state, :socket, socket)}
