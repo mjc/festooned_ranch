@@ -14,13 +14,13 @@ defmodule FestoonedRanch.Protocol do
     {:ok, socket} = :ranch.handshake(ref, opts)
     # {:packet, 2} here expects a big-endian length at the start of your packet
     # and then it knows how much data to expect
-    :ok = transport.setopts(socket, [{:active, true}, {:packet, 2}])
+    :ok = :inet.setopts(socket, [{:active, true}, {:packet, 2}])
     :gen_server.enter_loop(__MODULE__, [], %{socket: socket, transport: transport})
   end
 
   @impl true
   def handle_info({:tcp, socket, data}, %{socket: socket, transport: transport} = state) do
-    #IO.inspect(data, label: "server got")
+    # IO.inspect(data, label: "server got")
     transport.send(socket, data)
     {:noreply, state}
   end
@@ -47,7 +47,8 @@ defmodule FestoonedRanch.Protocol do
 
   def peernames(ref) do
     connections = :ranch.procs(ref, :connections)
-    Enum.map(connections, fn(conn) ->
+
+    Enum.map(connections, fn conn ->
       {:ok, {ip, port}} = GenServer.call(conn, :peername)
       {ip, port}
     end)

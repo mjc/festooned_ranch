@@ -8,7 +8,8 @@ defmodule FestoonedRanch.Client do
     # any harder to read.
 
     # {:packet, 2} here prepends a big-endian length header to the data you send.
-    {:ok, socket} = :gen_tcp.connect(ip, port, [:binary, :inet, active: true, packet: 2])
+    {:ok, socket} = :gen_tcp.connect(ip, port, [:binary, :inet, active: true])
+    :inet.setopts(socket, [{:packet, 2}])
     :gen_tcp.controlling_process(socket, self())
 
     {:ok, Map.put(state, :socket, socket)}
@@ -24,15 +25,15 @@ defmodule FestoonedRanch.Client do
 
     {:noreply, Map.put(state, :socket, socket)}
   end
+
   @impl true
   def handle_info({:tcp, _socket, _data}, state) do
-    #IO.inspect(data, label: "client got")
+    # IO.inspect(data, label: "client got")
     {:noreply, state}
   end
 
   def handle_info({:tcp_closed, _}, state), do: {:stop, :normal, state}
   def handle_info({:tcp_error, _}, state), do: {:stop, :normal, state}
-
 
   @impl true
   def handle_call({:send, data}, _from, %{socket: socket} = state) do
